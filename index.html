@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>番茄鐘 Pomodoro Timer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="番茄鐘">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="description" content="專注工作，高效休息的番茄鐘應用">
+    <meta name="keywords" content="番茄鐘,pomodoro,時間管理,專注,工作,休息">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="番茄鐘 Pomodoro Timer">
+    <meta property="og:description" content="專注工作，高效休息的番茄鐘應用">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="icons/icon-512x512.png">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">
+                <i class="fas fa-tomato"></i>
+                番茄鐘
+            </h1>
+            <p class="subtitle">專注工作，高效休息</p>
+        </header>
+
+        <main class="main-content">
+            <div class="timer-container">
+                <div class="mode-selector">
+                    <button class="mode-btn active" data-mode="work">
+                        <i class="fas fa-briefcase"></i>
+                        工作
+                    </button>
+                    <button class="mode-btn" data-mode="short-break">
+                        <i class="fas fa-coffee"></i>
+                        短休息
+                    </button>
+                    <button class="mode-btn" data-mode="long-break">
+                        <i class="fas fa-bed"></i>
+                        長休息
+                    </button>
+                </div>
+
+                <div class="timer-display">
+                    <div class="time-circle">
+                        <svg class="progress-ring" width="300" height="300">
+                            <circle class="progress-ring-circle" cx="150" cy="150" r="140"></circle>
+                        </svg>
+                        <div class="time-text">
+                            <span id="minutes">25</span>
+                            <span class="separator">:</span>
+                            <span id="seconds">00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timer-controls">
+                    <button id="startBtn" class="control-btn start-btn">
+                        <i class="fas fa-play"></i>
+                        開始
+                    </button>
+                    <button id="pauseBtn" class="control-btn pause-btn" disabled>
+                        <i class="fas fa-pause"></i>
+                        暫停
+                    </button>
+                    <button id="resetBtn" class="control-btn reset-btn">
+                        <i class="fas fa-redo"></i>
+                        重置
+                    </button>
+                </div>
+
+                <div class="session-info">
+                    <div class="session-counter">
+                        <span>第 <span id="sessionNumber">1</span> 個番茄</span>
+                    </div>
+                    <div class="next-session">
+                        <span id="nextSessionText">下一個：短休息</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-panel">
+                <button id="settingsBtn" class="settings-btn">
+                    <i class="fas fa-cog"></i>
+                    設置
+                </button>
+            </div>
+        </main>
+
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>設置</h2>
+                    <button id="closeSettings" class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="setting-item">
+                        <label for="workTime">工作時間 (分鐘)</label>
+                        <input type="number" id="workTime" min="1" max="60" value="25">
+                    </div>
+                    <div class="setting-item">
+                        <label for="shortBreakTime">短休息時間 (分鐘)</label>
+                        <input type="number" id="shortBreakTime" min="1" max="30" value="5">
+                    </div>
+                    <div class="setting-item">
+                        <label for="longBreakTime">長休息時間 (分鐘)</label>
+                        <input type="number" id="longBreakTime" min="1" max="60" value="15">
+                    </div>
+                    <div class="setting-item">
+                        <label for="longBreakInterval">長休息間隔 (番茄數)</label>
+                        <input type="number" id="longBreakInterval" min="2" max="10" value="4">
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="soundEnabled" checked>
+                            啟用音效
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="saveSettings" class="save-btn">保存設置</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="notification" class="notification">
+            <div class="notification-content">
+                <i class="fas fa-bell"></i>
+                <span id="notificationText">時間到了！</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

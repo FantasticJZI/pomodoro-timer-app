@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>番茄鐘圖標生成器</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .icon-container { display: inline-block; margin: 10px; text-align: center; }
+        canvas { border: 1px solid #ccc; margin: 5px; }
+        button { margin: 5px; padding: 10px 15px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>🍅 番茄鐘圖標生成器</h1>
+    <p>點擊下載按鈕保存圖標到icons文件夾，並重命名為對應的尺寸：</p>
+    
+    <div id="icons"></div>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        
+        function createIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // 背景圓形
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#ff6b6b');
+            gradient.addColorStop(1, '#ee5a52');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/2 - 4, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 白色邊框
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = size/64;
+            ctx.stroke();
+            
+            // 番茄形狀
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.ellipse(size/2, size/2 + size/16, size/4, size/3.5, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 番茄蒂
+            ctx.fillStyle = '#4a5d23';
+            ctx.fillRect(size/2 - size/16, size/2 - size/3, size/8, size/12);
+            
+            // 數字25
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = `bold ${size/6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('25', size/2, size/2 + size/16);
+            
+            // 裝飾點
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(size/2 - size/4, size/2 - size/6, size/32, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(size/2 + size/4, size/2 - size/6, size/32, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            return canvas;
+        }
+        
+        function downloadIcon(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // 生成所有圖標
+        sizes.forEach(size => {
+            const container = document.createElement('div');
+            container.className = 'icon-container';
+            
+            const canvas = createIcon(size);
+            const button = document.createElement('button');
+            button.textContent = `下載 ${size}x${size}`;
+            button.onclick = () => downloadIcon(canvas, `icon-${size}x${size}.png`);
+            
+            const label = document.createElement('div');
+            label.textContent = `${size}x${size}`;
+            
+            container.appendChild(label);
+            container.appendChild(canvas);
+            container.appendChild(button);
+            
+            document.getElementById('icons').appendChild(container);
+        });
+    </script>
+</body>
+</html>
