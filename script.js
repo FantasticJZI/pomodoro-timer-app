@@ -108,6 +108,12 @@ class PomodoroPro {
         
         // Session 設置
         this.sessionCountInput = document.getElementById('sessionCount');
+        this.decreaseSessionBtn = document.getElementById('decreaseSession');
+        this.increaseSessionBtn = document.getElementById('increaseSession');
+        this.sessionProgressBar = document.getElementById('sessionProgressBar');
+        this.currentSessionEl = document.getElementById('currentSession');
+        this.totalSessionsEl = document.getElementById('totalSessions');
+        this.remainingSessionsEl = document.getElementById('remainingSessions');
         
         // 項目模態框元素
         this.projectNameInput = document.getElementById('projectName');
@@ -173,6 +179,8 @@ class PomodoroPro {
         
         // Session 數量變更事件
         this.sessionCountInput.addEventListener('change', () => this.updateSessionCount());
+        this.decreaseSessionBtn.addEventListener('click', () => this.decreaseSession());
+        this.increaseSessionBtn.addEventListener('click', () => this.increaseSession());
         
         // 項目模態框事件
         this.closeProjectModalBtn = document.getElementById('closeProjectModal');
@@ -695,9 +703,30 @@ class PomodoroPro {
         if (newCount >= 1 && newCount <= 20) {
             this.totalSessions = newCount;
             this.updateSessionDisplay();
+            this.updateSessionUI();
         } else {
             // 恢復到有效值
             this.sessionCountInput.value = this.totalSessions;
+        }
+    }
+    
+    // 減少 Session 數量
+    decreaseSession() {
+        if (this.totalSessions > 1) {
+            this.totalSessions--;
+            this.sessionCountInput.value = this.totalSessions;
+            this.updateSessionDisplay();
+            this.updateSessionUI();
+        }
+    }
+    
+    // 增加 Session 數量
+    increaseSession() {
+        if (this.totalSessions < 20) {
+            this.totalSessions++;
+            this.sessionCountInput.value = this.totalSessions;
+            this.updateSessionDisplay();
+            this.updateSessionUI();
         }
     }
     
@@ -709,6 +738,26 @@ class PomodoroPro {
         } else {
             this.nextSessionTextEl.textContent = '所有 Session 完成！';
         }
+    }
+    
+    // 更新 Session UI
+    updateSessionUI() {
+        // 更新統計顯示
+        this.currentSessionEl.textContent = this.sessionCount;
+        this.totalSessionsEl.textContent = this.totalSessions;
+        this.remainingSessionsEl.textContent = Math.max(0, this.totalSessions - this.sessionCount + 1);
+        
+        // 更新進度條
+        const progress = Math.min(100, ((this.sessionCount - 1) / this.totalSessions) * 100);
+        this.sessionProgressBar.style.width = `${progress}%`;
+        
+        // 更新按鈕狀態
+        this.decreaseSessionBtn.disabled = this.totalSessions <= 1;
+        this.increaseSessionBtn.disabled = this.totalSessions >= 20;
+        
+        // 更新輸入框範圍
+        this.sessionCountInput.min = 1;
+        this.sessionCountInput.max = this.totalSessions;
     }
     
     // 計時器核心功能
@@ -869,6 +918,9 @@ class PomodoroPro {
         // 增加 Session 計數
         this.sessionCount++;
         this.sessionNumberEl.textContent = this.sessionCount;
+        
+        // 更新 Session UI
+        this.updateSessionUI();
         
         // 切換到休息模式
         this.switchToBreakMode();
@@ -1610,6 +1662,7 @@ class PomodoroPro {
         
         // 更新顯示
         this.updateSessionDisplay();
+        this.updateSessionUI();
         this.switchMode(this.currentMode);
         
         this.updateProjectSelect();
