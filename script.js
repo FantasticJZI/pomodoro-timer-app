@@ -91,6 +91,11 @@ class PomodoroPro {
         this.ambientEnabledInput = document.getElementById('ambientEnabled');
         this.aiPersonalityInput = document.getElementById('aiPersonality');
         
+        // 音效測試按鈕
+        this.testStartSoundBtn = document.getElementById('testStartSound');
+        this.testWorkCompleteBtn = document.getElementById('testWorkComplete');
+        this.testBreakCompleteBtn = document.getElementById('testBreakComplete');
+        
         // 項目模態框元素
         this.projectNameInput = document.getElementById('projectName');
         this.projectDescriptionInput = document.getElementById('projectDescription');
@@ -147,6 +152,11 @@ class PomodoroPro {
         this.settingsBtn.addEventListener('click', () => this.openSettings());
         this.closeSettingsBtn.addEventListener('click', () => this.closeSettings());
         this.saveSettingsBtn.addEventListener('click', () => this.saveSettings());
+        
+        // 音效測試按鈕事件
+        this.testStartSoundBtn.addEventListener('click', () => this.playStartSound());
+        this.testWorkCompleteBtn.addEventListener('click', () => this.testWorkCompletionSound());
+        this.testBreakCompleteBtn.addEventListener('click', () => this.testBreakCompletionSound());
         
         // 項目模態框事件
         this.closeProjectModalBtn = document.getElementById('closeProjectModal');
@@ -404,6 +414,250 @@ class PomodoroPro {
     
     // 備用音效方法已移至 ambient-sounds.js
     
+    // 播放提示音效
+    playNotificationSound() {
+        if (!this.settings.soundEnabled) return;
+        
+        try {
+            // 創建音頻上下文
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // 創建主增益節點
+            const masterGain = this.audioContext.createGain();
+            masterGain.connect(this.audioContext.destination);
+            masterGain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+            
+            // 創建嗶嗶聲 - 使用多個頻率模擬更自然的提示音
+            const frequencies = [800, 1000, 1200]; // 三個頻率
+            const duration = 0.3; // 持續時間
+            
+            frequencies.forEach((freq, index) => {
+                const oscillator = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                const filter = this.audioContext.createBiquadFilter();
+                
+                oscillator.connect(filter);
+                filter.connect(gain);
+                gain.connect(masterGain);
+                
+                // 設置濾波器
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+                filter.Q.setValueAtTime(1, this.audioContext.currentTime);
+                
+                // 設置振盪器
+                oscillator.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+                oscillator.type = 'sine';
+                
+                // 設置增益包絡
+                const startTime = this.audioContext.currentTime + (index * 0.1);
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
+                gain.gain.linearRampToValueAtTime(0, startTime + duration);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + duration);
+            });
+            
+        } catch (error) {
+            console.log('音效播放失敗:', error);
+        }
+    }
+    
+    // 播放開始音效
+    playStartSound() {
+        if (!this.settings.soundEnabled) return;
+        
+        try {
+            // 創建音頻上下文
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // 創建主增益節點
+            const masterGain = this.audioContext.createGain();
+            masterGain.connect(this.audioContext.destination);
+            masterGain.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+            
+            // 創建開始音效 - 上升音調
+            const oscillator = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+            const filter = this.audioContext.createBiquadFilter();
+            
+            oscillator.connect(filter);
+            filter.connect(gain);
+            gain.connect(masterGain);
+            
+            // 設置濾波器
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1200, this.audioContext.currentTime);
+            filter.Q.setValueAtTime(0.5, this.audioContext.currentTime);
+            
+            // 設置振盪器 - 上升音調
+            oscillator.frequency.setValueAtTime(600, this.audioContext.currentTime);
+            oscillator.frequency.linearRampToValueAtTime(1000, this.audioContext.currentTime + 0.2);
+            oscillator.type = 'sine';
+            
+            // 設置增益包絡
+            gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+            gain.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.05);
+            gain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.2);
+            
+            oscillator.start();
+            oscillator.stop(this.audioContext.currentTime + 0.2);
+            
+        } catch (error) {
+            console.log('開始音效播放失敗:', error);
+        }
+    }
+    
+    // 播放完成音效
+    playCompletionSound() {
+        if (!this.settings.soundEnabled) return;
+        
+        try {
+            // 創建音頻上下文
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // 創建主增益節點
+            const masterGain = this.audioContext.createGain();
+            masterGain.connect(this.audioContext.destination);
+            masterGain.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+            
+            // 根據模式播放不同的音效
+            if (this.currentMode === 'work') {
+                // 工作完成 - 三聲嗶嗶聲
+                this.playWorkCompletionSound(masterGain);
+            } else if (this.currentMode === 'short-break') {
+                // 短休息完成 - 兩聲嗶嗶聲
+                this.playBreakCompletionSound(masterGain, 2);
+            } else if (this.currentMode === 'long-break') {
+                // 長休息完成 - 四聲嗶嗶聲
+                this.playBreakCompletionSound(masterGain, 4);
+            }
+            
+        } catch (error) {
+            console.log('完成音效播放失敗:', error);
+        }
+    }
+    
+    // 工作完成音效
+    playWorkCompletionSound(masterGain) {
+        const frequencies = [800, 1000, 1200];
+        const duration = 0.2;
+        
+        frequencies.forEach((freq, index) => {
+            const oscillator = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+            const filter = this.audioContext.createBiquadFilter();
+            
+            oscillator.connect(filter);
+            filter.connect(gain);
+            gain.connect(masterGain);
+            
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+            filter.Q.setValueAtTime(1, this.audioContext.currentTime);
+            
+            oscillator.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+            oscillator.type = 'sine';
+            
+            const startTime = this.audioContext.currentTime + (index * 0.15);
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+            gain.gain.linearRampToValueAtTime(0, startTime + duration);
+            
+            oscillator.start(startTime);
+            oscillator.stop(startTime + duration);
+        });
+    }
+    
+    // 休息完成音效
+    playBreakCompletionSound(masterGain, beepCount) {
+        const frequency = 600;
+        const duration = 0.15;
+        const interval = 0.2;
+        
+        for (let i = 0; i < beepCount; i++) {
+            const oscillator = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+            const filter = this.audioContext.createBiquadFilter();
+            
+            oscillator.connect(filter);
+            filter.connect(gain);
+            gain.connect(masterGain);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(frequency + (i * 100), this.audioContext.currentTime);
+            filter.Q.setValueAtTime(0.5, this.audioContext.currentTime);
+            
+            oscillator.frequency.setValueAtTime(frequency + (i * 100), this.audioContext.currentTime);
+            oscillator.type = 'sine';
+            
+            const startTime = this.audioContext.currentTime + (i * interval);
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.25, startTime + 0.05);
+            gain.gain.linearRampToValueAtTime(0, startTime + duration);
+            
+            oscillator.start(startTime);
+            oscillator.stop(startTime + duration);
+        }
+    }
+    
+    // 測試工作完成音效
+    testWorkCompletionSound() {
+        if (!this.settings.soundEnabled) {
+            this.showNotification('請先啟用音效設置', 'info');
+            return;
+        }
+        
+        try {
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            const masterGain = this.audioContext.createGain();
+            masterGain.connect(this.audioContext.destination);
+            masterGain.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+            
+            this.playWorkCompletionSound(masterGain);
+            this.showNotification('播放工作完成音效', 'info');
+            
+        } catch (error) {
+            console.log('測試音效播放失敗:', error);
+            this.showNotification('音效播放失敗', 'error');
+        }
+    }
+    
+    // 測試休息完成音效
+    testBreakCompletionSound() {
+        if (!this.settings.soundEnabled) {
+            this.showNotification('請先啟用音效設置', 'info');
+            return;
+        }
+        
+        try {
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            const masterGain = this.audioContext.createGain();
+            masterGain.connect(this.audioContext.destination);
+            masterGain.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+            
+            this.playBreakCompletionSound(masterGain, 2);
+            this.showNotification('播放休息完成音效', 'info');
+            
+        } catch (error) {
+            console.log('測試音效播放失敗:', error);
+            this.showNotification('音效播放失敗', 'error');
+        }
+    }
+    
     // 計時器核心功能
     switchMode(mode) {
         if (this.isRunning) return;
@@ -444,6 +698,11 @@ class PomodoroPro {
             this.startBtn.disabled = true;
             this.pauseBtn.disabled = false;
             
+            // 播放開始音效
+            if (this.settings.soundEnabled) {
+                this.playStartSound();
+            }
+            
             // 記錄開始時間
             this.sessionStartTime = new Date();
             
@@ -473,6 +732,11 @@ class PomodoroPro {
         this.isPaused = false;
         this.startBtn.disabled = true;
         this.pauseBtn.disabled = false;
+        
+        // 播放恢復音效
+        if (this.settings.soundEnabled) {
+            this.playStartSound();
+        }
         
         this.timer = setInterval(() => {
             this.timeLeft--;
@@ -511,7 +775,7 @@ class PomodoroPro {
         
         // 播放提示音
         if (this.settings.soundEnabled) {
-            this.playNotificationSound();
+            this.playCompletionSound();
         }
         
         // 顯示通知
