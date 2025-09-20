@@ -13,32 +13,39 @@ body {
     overflow-x: hidden;
 }
 
-.container {
-    max-width: 800px;
+.app-container {
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-/* 標題區域 */
-.header {
-    text-align: center;
-    margin-bottom: 40px;
-    color: white;
+/* 導航欄 */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-.title {
-    font-size: 3rem;
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
     font-weight: 700;
-    margin-bottom: 10px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    color: #2c3e50;
 }
 
-.title i {
+.nav-brand i {
     color: #ff6b6b;
-    margin-right: 15px;
     animation: pulse 2s infinite;
 }
 
@@ -47,27 +54,70 @@ body {
     50% { transform: scale(1.1); }
 }
 
-.subtitle {
-    font-size: 1.2rem;
-    font-weight: 300;
-    opacity: 0.9;
+.nav-menu {
+    display: flex;
+    gap: 10px;
 }
 
-/* 主要內容區域 */
-.main-content {
-    flex: 1;
+.nav-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 5px;
+    padding: 10px 15px;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #6c757d;
+    font-size: 0.8rem;
 }
 
+.nav-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+}
+
+.nav-btn.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.nav-btn i {
+    font-size: 1.2rem;
+}
+
+/* 主內容區域 */
+.main-content {
+    flex: 1;
+    padding: 20px;
+}
+
+.page {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.page.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 計時器頁面 */
 .timer-container {
     background: white;
     border-radius: 30px;
     padding: 40px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 500px;
+    max-width: 600px;
+    margin: 0 auto;
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -89,6 +139,37 @@ body {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
+}
+
+/* 項目選擇器 */
+.project-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    border-left: 4px solid #4ecdc4;
+}
+
+.project-selector label {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.project-select {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+}
+
+.project-select:focus {
+    outline: none;
+    border-color: #4ecdc4;
 }
 
 /* 模式選擇器 */
@@ -265,28 +346,355 @@ body {
     color: #6c757d;
 }
 
-/* 設置按鈕 */
-.settings-panel {
-    margin-top: 30px;
+/* 環境音控制 */
+.ambient-sound {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    border-left: 4px solid #45b7d1;
 }
 
-.settings-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50px;
-    padding: 12px 20px;
+.ambient-sound label {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.ambient-select {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+}
+
+.ambient-select:focus {
+    outline: none;
+    border-color: #45b7d1;
+}
+
+/* 頁面標題 */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.page-header h2 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+/* 按鈕樣式 */
+.btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 0.9rem;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.settings-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+.btn-primary:hover {
     transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f8f9fa;
+    color: #6c757d;
+    border: 2px solid #e9ecef;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-secondary:hover {
+    background: #e9ecef;
+    border-color: #4ecdc4;
+    color: #4ecdc4;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef5350, #e53935);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 83, 80, 0.4);
+}
+
+/* 項目列表 */
+.projects-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.project-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--project-color, #4ecdc4);
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.project-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.project-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.project-description {
+    color: #6c757d;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.project-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* 統計頁面 */
+.analytics-content {
+    display: grid;
+    gap: 30px;
+}
+
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h3 {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.chart-container {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+}
+
+.ai-summary {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.ai-summary h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+}
+
+.summary-content {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+
+/* AI助理頁面 */
+.ai-assistant-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+}
+
+.chat-container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.ai-message, .user-message {
+    display: flex;
+    gap: 10px;
+}
+
+.user-message {
+    justify-content: flex-end;
+}
+
+.message-content {
+    max-width: 70%;
+    padding: 15px 20px;
+    border-radius: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.ai-message .message-content {
+    background: #f8f9fa;
+    color: #2c3e50;
+}
+
+.user-message .message-content {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.message-content i {
+    font-size: 1.2rem;
+    margin-top: 2px;
+}
+
+.chat-input-container {
+    display: flex;
+    padding: 20px;
+    gap: 10px;
+    border-top: 1px solid #e9ecef;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 25px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.chat-input:focus {
+    border-color: #667eea;
+}
+
+.ai-features {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.ai-features h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.feature-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #6c757d;
+}
+
+.feature-btn:hover {
+    border-color: #667eea;
+    color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.feature-btn i {
+    font-size: 1.5rem;
 }
 
 /* 模態框 */
@@ -358,8 +766,20 @@ body {
     padding: 30px;
 }
 
+.setting-group {
+    margin-bottom: 30px;
+}
+
+.setting-group h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    border-bottom: 2px solid #f8f9fa;
+    padding-bottom: 10px;
+}
+
 .setting-item {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .setting-item label {
@@ -369,21 +789,32 @@ body {
     color: #2c3e50;
 }
 
-.setting-item input[type="number"] {
+.setting-item input,
+.setting-item select,
+.setting-item textarea {
     width: 100%;
     padding: 12px 15px;
     border: 2px solid #e9ecef;
     border-radius: 10px;
     font-size: 1rem;
     transition: border-color 0.3s ease;
+    font-family: inherit;
 }
 
-.setting-item input[type="number"]:focus {
+.setting-item input:focus,
+.setting-item select:focus,
+.setting-item textarea:focus {
     outline: none;
     border-color: #4ecdc4;
 }
 
+.setting-item textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
 .setting-item input[type="checkbox"] {
+    width: auto;
     margin-right: 10px;
     transform: scale(1.2);
 }
@@ -439,12 +870,25 @@ body {
 
 /* 響應式設計 */
 @media (max-width: 768px) {
-    .container {
-        padding: 15px;
+    .navbar {
+        padding: 10px 15px;
     }
     
-    .title {
-        font-size: 2.5rem;
+    .nav-menu {
+        gap: 5px;
+    }
+    
+    .nav-btn {
+        padding: 8px 10px;
+        font-size: 0.7rem;
+    }
+    
+    .nav-btn span {
+        display: none;
+    }
+    
+    .main-content {
+        padding: 15px;
     }
     
     .timer-container {
@@ -472,6 +916,32 @@ body {
     
     .control-btn {
         width: 100%;
+    }
+    
+    .project-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .ambient-sound {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .ai-assistant-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .chat-container {
+        height: 400px;
+    }
+    
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-cards {
+        grid-template-columns: 1fr;
     }
     
     .modal-content {

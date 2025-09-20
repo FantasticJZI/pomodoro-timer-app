@@ -1,7 +1,7 @@
 {
-  "name": "番茄鐘 Pomodoro Timer",
-  "short_name": "番茄鐘",
-  "description": "專注工作，高效休息的番茄鐘應用",
+  "name": "番茄鐘Pro - 智能生產力管理",
+  "short_name": "番茄鐘Pro",
+  "description": "智能生產力管理系統，包含AI助理、項目追蹤、時間統計等功能",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#667eea",

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>番茄鐘 Pomodoro Timer</title>
+    <title>番茄鐘Pro - 智能生產力管理</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -13,90 +13,236 @@
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="番茄鐘">
+    <meta name="apple-mobile-web-app-title" content="番茄鐘Pro">
     <meta name="msapplication-TileColor" content="#667eea">
-    <meta name="description" content="專注工作，高效休息的番茄鐘應用">
-    <meta name="keywords" content="番茄鐘,pomodoro,時間管理,專注,工作,休息">
-    
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="番茄鐘 Pomodoro Timer">
-    <meta property="og:description" content="專注工作，高效休息的番茄鐘應用">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="icons/icon-512x512.png">
+    <meta name="description" content="智能生產力管理系統，包含AI助理、項目追蹤、時間統計等功能">
+    <meta name="keywords" content="番茄鐘,pomodoro,時間管理,AI助理,生產力,項目管理">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1 class="title">
+    <div class="app-container">
+        <!-- 導航欄 -->
+        <nav class="navbar">
+            <div class="nav-brand">
                 <i class="fas fa-tomato"></i>
-                番茄鐘
-            </h1>
-            <p class="subtitle">專注工作，高效休息</p>
-        </header>
+                <span>番茄鐘Pro</span>
+            </div>
+            <div class="nav-menu">
+                <button class="nav-btn active" data-page="timer">
+                    <i class="fas fa-clock"></i>
+                    <span>計時器</span>
+                </button>
+                <button class="nav-btn" data-page="projects">
+                    <i class="fas fa-folder"></i>
+                    <span>項目</span>
+                </button>
+                <button class="nav-btn" data-page="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>統計</span>
+                </button>
+                <button class="nav-btn" data-page="ai-assistant">
+                    <i class="fas fa-robot"></i>
+                    <span>AI助理</span>
+                </button>
+            </div>
+        </nav>
 
+        <!-- 主內容區域 -->
         <main class="main-content">
-            <div class="timer-container">
-                <div class="mode-selector">
-                    <button class="mode-btn active" data-mode="work">
-                        <i class="fas fa-briefcase"></i>
-                        工作
-                    </button>
-                    <button class="mode-btn" data-mode="short-break">
-                        <i class="fas fa-coffee"></i>
-                        短休息
-                    </button>
-                    <button class="mode-btn" data-mode="long-break">
-                        <i class="fas fa-bed"></i>
-                        長休息
-                    </button>
+            <!-- 計時器頁面 -->
+            <div id="timer-page" class="page active">
+                <div class="timer-container">
+                    <div class="project-selector">
+                        <label for="currentProject">當前項目：</label>
+                        <select id="currentProject" class="project-select">
+                            <option value="">選擇項目...</option>
+                        </select>
+                        <button id="addProjectBtn" class="btn-secondary">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <div class="mode-selector">
+                        <button class="mode-btn active" data-mode="work">
+                            <i class="fas fa-briefcase"></i>
+                            工作
+                        </button>
+                        <button class="mode-btn" data-mode="short-break">
+                            <i class="fas fa-coffee"></i>
+                            短休息
+                        </button>
+                        <button class="mode-btn" data-mode="long-break">
+                            <i class="fas fa-bed"></i>
+                            長休息
+                        </button>
+                    </div>
+
+                    <div class="timer-display">
+                        <div class="time-circle">
+                            <svg class="progress-ring" width="300" height="300">
+                                <circle class="progress-ring-circle" cx="150" cy="150" r="140"></circle>
+                            </svg>
+                            <div class="time-text">
+                                <span id="minutes">25</span>
+                                <span class="separator">:</span>
+                                <span id="seconds">00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timer-controls">
+                        <button id="startBtn" class="control-btn start-btn">
+                            <i class="fas fa-play"></i>
+                            開始
+                        </button>
+                        <button id="pauseBtn" class="control-btn pause-btn" disabled>
+                            <i class="fas fa-pause"></i>
+                            暫停
+                        </button>
+                        <button id="resetBtn" class="control-btn reset-btn">
+                            <i class="fas fa-redo"></i>
+                            重置
+                        </button>
+                    </div>
+
+                    <div class="session-info">
+                        <div class="session-counter">
+                            <span>第 <span id="sessionNumber">1</span> 個番茄</span>
+                        </div>
+                        <div class="next-session">
+                            <span id="nextSessionText">下一個：短休息</span>
+                        </div>
+                    </div>
+
+                    <!-- 環境音控制 -->
+                    <div class="ambient-sound">
+                        <label for="ambientSelect">環境音：</label>
+                        <select id="ambientSelect" class="ambient-select">
+                            <option value="">無</option>
+                            <option value="rain">雨聲</option>
+                            <option value="forest">森林</option>
+                            <option value="ocean">海浪</option>
+                            <option value="cafe">咖啡廳</option>
+                            <option value="white-noise">白噪音</option>
+                        </select>
+                        <button id="playAmbientBtn" class="btn-secondary" disabled>
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button id="stopAmbientBtn" class="btn-secondary" disabled>
+                            <i class="fas fa-stop"></i>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="timer-display">
-                    <div class="time-circle">
-                        <svg class="progress-ring" width="300" height="300">
-                            <circle class="progress-ring-circle" cx="150" cy="150" r="140"></circle>
-                        </svg>
-                        <div class="time-text">
-                            <span id="minutes">25</span>
-                            <span class="separator">:</span>
-                            <span id="seconds">00</span>
+                <div class="settings-panel">
+                    <button id="settingsBtn" class="settings-btn">
+                        <i class="fas fa-cog"></i>
+                        設置
+                    </button>
+                </div>
+            </div>
+
+            <!-- 項目管理頁面 -->
+            <div id="projects-page" class="page">
+                <div class="page-header">
+                    <h2>項目管理</h2>
+                    <button id="addNewProjectBtn" class="btn-primary">
+                        <i class="fas fa-plus"></i>
+                        新增項目
+                    </button>
+                </div>
+                <div id="projectsList" class="projects-list">
+                    <!-- 項目列表將在這裡動態生成 -->
+                </div>
+            </div>
+
+            <!-- 統計分析頁面 -->
+            <div id="analytics-page" class="page">
+                <div class="page-header">
+                    <h2>時間統計</h2>
+                    <div class="date-selector">
+                        <input type="date" id="analyticsDate" class="date-input">
+                    </div>
+                </div>
+                <div class="analytics-content">
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <h3>今日總時間</h3>
+                            <div class="stat-value" id="todayTotalTime">0h 0m</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>完成番茄</h3>
+                            <div class="stat-value" id="todayPomodoros">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>專注度</h3>
+                            <div class="stat-value" id="focusScore">0%</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>項目時間分布</h3>
+                        <canvas id="projectChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="ai-summary">
+                        <h3>AI工作摘要</h3>
+                        <div id="aiSummaryContent" class="summary-content">
+                            <p>點擊下方按鈕生成今日工作摘要</p>
+                        </div>
+                        <button id="generateSummaryBtn" class="btn-primary">
+                            <i class="fas fa-robot"></i>
+                            生成AI摘要
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI助理頁面 -->
+            <div id="ai-assistant-page" class="page">
+                <div class="page-header">
+                    <h2>AI助理</h2>
+                </div>
+                <div class="ai-assistant-content">
+                    <div class="chat-container">
+                        <div id="chatMessages" class="chat-messages">
+                            <div class="ai-message">
+                                <div class="message-content">
+                                    <i class="fas fa-robot"></i>
+                                    <p>你好！我是你的AI生產力助理。我可以幫你分析工作模式、提供建議，並協助你達成目標。有什麼我可以幫助你的嗎？</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input-container">
+                            <input type="text" id="chatInput" placeholder="輸入你的問題或目標..." class="chat-input">
+                            <button id="sendMessageBtn" class="btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ai-features">
+                        <h3>AI功能</h3>
+                        <div class="feature-grid">
+                            <button class="feature-btn" data-feature="weekly-report">
+                                <i class="fas fa-chart-line"></i>
+                                <span>週報分析</span>
+                            </button>
+                            <button class="feature-btn" data-feature="goal-setting">
+                                <i class="fas fa-target"></i>
+                                <span>目標設定</span>
+                            </button>
+                            <button class="feature-btn" data-feature="productivity-tips">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>效率建議</span>
+                            </button>
+                            <button class="feature-btn" data-feature="time-optimization">
+                                <i class="fas fa-clock"></i>
+                                <span>時間優化</span>
+                            </button>
                         </div>
                     </div>
                 </div>
-
-                <div class="timer-controls">
-                    <button id="startBtn" class="control-btn start-btn">
-                        <i class="fas fa-play"></i>
-                        開始
-                    </button>
-                    <button id="pauseBtn" class="control-btn pause-btn" disabled>
-                        <i class="fas fa-pause"></i>
-                        暫停
-                    </button>
-                    <button id="resetBtn" class="control-btn reset-btn">
-                        <i class="fas fa-redo"></i>
-                        重置
-                    </button>
-                </div>
-
-                <div class="session-info">
-                    <div class="session-counter">
-                        <span>第 <span id="sessionNumber">1</span> 個番茄</span>
-                    </div>
-                    <div class="next-session">
-                        <span id="nextSessionText">下一個：短休息</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="settings-panel">
-                <button id="settingsBtn" class="settings-btn">
-                    <i class="fas fa-cog"></i>
-                    設置
-                </button>
             </div>
         </main>
 
+        <!-- 設置模態框 -->
         <div id="settingsModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -106,27 +252,50 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="setting-item">
-                        <label for="workTime">工作時間 (分鐘)</label>
-                        <input type="number" id="workTime" min="1" max="60" value="25">
+                    <div class="setting-group">
+                        <h3>計時器設置</h3>
+                        <div class="setting-item">
+                            <label for="workTime">工作時間 (分鐘)</label>
+                            <input type="number" id="workTime" min="1" max="60" value="25">
+                        </div>
+                        <div class="setting-item">
+                            <label for="shortBreakTime">短休息時間 (分鐘)</label>
+                            <input type="number" id="shortBreakTime" min="1" max="30" value="5">
+                        </div>
+                        <div class="setting-item">
+                            <label for="longBreakTime">長休息時間 (分鐘)</label>
+                            <input type="number" id="longBreakTime" min="1" max="60" value="15">
+                        </div>
+                        <div class="setting-item">
+                            <label for="longBreakInterval">長休息間隔 (番茄數)</label>
+                            <input type="number" id="longBreakInterval" min="2" max="10" value="4">
+                        </div>
                     </div>
-                    <div class="setting-item">
-                        <label for="shortBreakTime">短休息時間 (分鐘)</label>
-                        <input type="number" id="shortBreakTime" min="1" max="30" value="5">
+                    <div class="setting-group">
+                        <h3>音效設置</h3>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="soundEnabled" checked>
+                                啟用音效
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="ambientEnabled" checked>
+                                啟用環境音
+                            </label>
+                        </div>
                     </div>
-                    <div class="setting-item">
-                        <label for="longBreakTime">長休息時間 (分鐘)</label>
-                        <input type="number" id="longBreakTime" min="1" max="60" value="15">
-                    </div>
-                    <div class="setting-item">
-                        <label for="longBreakInterval">長休息間隔 (番茄數)</label>
-                        <input type="number" id="longBreakInterval" min="2" max="10" value="4">
-                    </div>
-                    <div class="setting-item">
-                        <label>
-                            <input type="checkbox" id="soundEnabled" checked>
-                            啟用音效
-                        </label>
+                    <div class="setting-group">
+                        <h3>AI設置</h3>
+                        <div class="setting-item">
+                            <label for="aiPersonality">AI個性</label>
+                            <select id="aiPersonality">
+                                <option value="friendly">友善型</option>
+                                <option value="professional">專業型</option>
+                                <option value="motivational">激勵型</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -135,6 +304,41 @@
             </div>
         </div>
 
+        <!-- 項目編輯模態框 -->
+        <div id="projectModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="projectModalTitle">新增項目</h2>
+                    <button id="closeProjectModal" class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="setting-item">
+                        <label for="projectName">項目名稱</label>
+                        <input type="text" id="projectName" placeholder="輸入項目名稱">
+                    </div>
+                    <div class="setting-item">
+                        <label for="projectDescription">項目描述</label>
+                        <textarea id="projectDescription" placeholder="輸入項目描述"></textarea>
+                    </div>
+                    <div class="setting-item">
+                        <label for="projectColor">項目顏色</label>
+                        <input type="color" id="projectColor" value="#667eea">
+                    </div>
+                    <div class="setting-item">
+                        <label for="projectGoal">目標番茄數</label>
+                        <input type="number" id="projectGoal" min="1" value="10">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="saveProject" class="save-btn">保存項目</button>
+                    <button id="deleteProject" class="btn-danger" style="display: none;">刪除項目</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 通知 -->
         <div id="notification" class="notification">
             <div class="notification-content">
                 <i class="fas fa-bell"></i>
