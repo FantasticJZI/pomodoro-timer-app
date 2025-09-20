@@ -241,11 +241,11 @@ body {
 }
 
 .session-settings h3 {
-    color: white;
+    color: #2c3e50;
     font-size: 1.2rem;
     font-weight: 600;
     margin: 0 0 20px 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: none;
 }
 
 .session-controls {
@@ -260,8 +260,8 @@ body {
     height: 40px;
     border: none;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: rgba(255, 255, 255, 0.9);
+    color: #2c3e50;
     font-size: 1.2rem;
     font-weight: bold;
     cursor: pointer;
@@ -270,11 +270,13 @@ body {
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .session-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 1);
+    color: #2c3e50;
     transform: scale(1.1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -312,7 +314,7 @@ body {
 }
 
 .session-info {
-    color: rgba(255, 255, 255, 0.9);
+    color: #2c3e50;
     font-weight: 500;
     font-size: 0.9rem;
     text-align: center;
@@ -342,7 +344,7 @@ body {
     width: 100%;
     margin-top: 15px;
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: #2c3e50;
 }
 
 .session-stat {
@@ -355,7 +357,7 @@ body {
 .session-stat-value {
     font-weight: 600;
     font-size: 1.1rem;
-    color: white;
+    color: #2c3e50;
 }
 
 .session-stat-label {
