@@ -712,13 +712,17 @@ body {
 
 .modal-content {
     background-color: white;
-    margin: 5% auto;
+    margin: 2% auto;
     padding: 0;
     border-radius: 20px;
     width: 90%;
     max-width: 500px;
+    max-height: 90vh;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     animation: modalSlideIn 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 @keyframes modalSlideIn {
@@ -764,6 +768,28 @@ body {
 
 .modal-body {
     padding: 30px;
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #667eea #f1f1f1;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #5a6fd8;
 }
 
 .setting-group {
@@ -868,6 +894,40 @@ body {
     font-weight: 500;
 }
 
+/* 項目模態框 */
+.project-modal .modal-content {
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.project-modal .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #667eea #f1f1f1;
+}
+
+.project-modal .modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.project-modal .modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.project-modal .modal-body::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 3px;
+}
+
+.project-modal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: #5a6fd8;
+}
+
 /* 響應式設計 */
 @media (max-width: 768px) {
     .navbar {
@@ -945,8 +1005,13 @@ body {
     }
     
     .modal-content {
-        margin: 10% auto;
+        margin: 5% auto;
         width: 95%;
+        max-height: 85vh;
+    }
+    
+    .modal-body {
+        padding: 20px;
     }
     
     .notification {
