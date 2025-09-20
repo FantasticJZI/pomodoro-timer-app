@@ -658,6 +658,21 @@ class PomodoroPro {
         }
     }
     
+    // 格式化時間顯示
+    formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+        
+        if (hours > 0) {
+            return `${hours}小時${minutes}分鐘${remainingSeconds > 0 ? `${remainingSeconds}秒` : ''}`;
+        } else if (minutes > 0) {
+            return `${minutes}分鐘${remainingSeconds > 0 ? `${remainingSeconds}秒` : ''}`;
+        } else {
+            return `${remainingSeconds}秒`;
+        }
+    }
+    
     // 計時器核心功能
     switchMode(mode) {
         if (this.isRunning) return;
@@ -947,7 +962,14 @@ class PomodoroPro {
         const workLogs = dayLogs.filter(log => log.mode === 'work');
         const completedPomodoros = workLogs.length;
         
-        this.todayTotalTimeEl.textContent = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
+        // 正確顯示總時間
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        if (hours > 0) {
+            this.todayTotalTimeEl.textContent = `${hours}h ${minutes}m`;
+        } else {
+            this.todayTotalTimeEl.textContent = `${minutes}m`;
+        }
         this.todayPomodorosEl.textContent = completedPomodoros;
         
         // 計算專注度（基於工作時間比例）
@@ -1004,8 +1026,14 @@ class PomodoroPro {
             ctx.textAlign = 'center';
             ctx.fillText(labels[index], x + barWidth / 2, this.projectChartEl.height - 5);
             
-            // 數值
-            ctx.fillText(`${Math.floor(value / 60)}m`, x + barWidth / 2, y - 5);
+            // 數值 - 顯示分鐘
+            const minutes = Math.floor(value / 60);
+            const seconds = value % 60;
+            if (minutes > 0) {
+                ctx.fillText(`${minutes}m${seconds > 0 ? `${seconds}s` : ''}`, x + barWidth / 2, y - 5);
+            } else {
+                ctx.fillText(`${seconds}s`, x + barWidth / 2, y - 5);
+            }
         });
     }
     
@@ -1064,10 +1092,10 @@ class PomodoroPro {
         return `
             <div class="ai-summary-content">
                 <h4>📊 今日工作分析</h4>
-                <p><strong>總工作時間：</strong>${Math.floor(totalWorkTime / 60)}小時${totalWorkTime % 60}分鐘</p>
+                <p><strong>總工作時間：</strong>${this.formatTime(totalWorkTime)}</p>
                 <p><strong>完成番茄：</strong>${workLogs.length}個</p>
                 <p><strong>專注度評分：</strong>${focusScore}%</p>
-                <p><strong>主要項目：</strong>${topProject[0]} (${Math.floor(topProject[1] / 60)}小時)</p>
+                <p><strong>主要項目：</strong>${topProject[0]} (${this.formatTime(topProject[1])})</p>
                 
                 <h4>🎯 項目進度分析</h4>
                 ${projectAnalysis}
@@ -1086,15 +1114,13 @@ class PomodoroPro {
         
         Object.entries(projectStats).forEach(([projectName, timeSpent]) => {
             const details = projectDetails[projectName];
-            const hours = Math.floor(timeSpent / 60);
-            const minutes = timeSpent % 60;
             
             analysis += `<div class="project-analysis-item">`;
             analysis += `<h5>📋 ${projectName}</h5>`;
             
             if (details) {
                 analysis += `<p><strong>項目描述：</strong>${details.description || '無描述'}</p>`;
-                analysis += `<p><strong>今日投入：</strong>${hours}小時${minutes}分鐘</p>`;
+                analysis += `<p><strong>今日投入：</strong>${this.formatTime(timeSpent)}</p>`;
                 analysis += `<p><strong>總進度：</strong>${details.completedPomodoros}/${details.goal} 番茄 (${Math.round((details.completedPomodoros / details.goal) * 100)}%)</p>`;
                 
                 // 基於項目描述給出建議
@@ -1311,11 +1337,9 @@ class PomodoroPro {
             return '今天還沒有工作記錄，建議開始一個番茄鐘來提高生產力！';
         }
         
-        const hours = Math.floor(totalTime / 60);
-        const minutes = totalTime % 60;
         const projects = [...new Set(workLogs.map(log => log.projectName))];
         
-        return `今天你完成了${workLogs.length}個番茄鐘，總工作時間${hours}小時${minutes}分鐘。參與的項目有：${projects.join('、')}。${this.getWorkAnalysisAdvice(workLogs.length, totalTime)}`;
+        return `今天你完成了${workLogs.length}個番茄鐘，總工作時間${this.formatTime(totalTime)}。參與的項目有：${projects.join('、')}。${this.getWorkAnalysisAdvice(workLogs.length, totalTime)}`;
     }
     
     generateEfficiencyAdvice() {
@@ -1385,10 +1409,9 @@ class PomodoroPro {
         }
         
         const totalTime = workLogs.reduce((sum, log) => sum + log.duration, 0);
-        const hours = Math.floor(totalTime / 60);
         const projects = [...new Set(workLogs.map(log => log.projectName))];
         
-        return `本週工作報告：\n• 完成番茄鐘：${workLogs.length}個\n• 總工作時間：${hours}小時\n• 參與項目：${projects.join('、')}\n• 平均每天：${Math.round(workLogs.length / 7)}個番茄鐘\n\n建議下週保持這個節奏，繼續努力！`;
+        return `本週工作報告：\n• 完成番茄鐘：${workLogs.length}個\n• 總工作時間：${this.formatTime(totalTime)}\n• 參與項目：${projects.join('、')}\n• 平均每天：${Math.round(workLogs.length / 7)}個番茄鐘\n\n建議下週保持這個節奏，繼續努力！`;
     }
     
     getWorkAnalysisAdvice(pomodoros, totalTime) {
@@ -1444,8 +1467,8 @@ class PomodoroPro {
         const workEfficiency = totalWorkTime / (totalWorkTime + breakTime) * 100;
         
         let advice = `時間使用分析：\n`;
-        advice += `• 工作時間：${Math.floor(totalWorkTime / 60)}小時${totalWorkTime % 60}分鐘\n`;
-        advice += `• 休息時間：${Math.floor(breakTime / 60)}小時${breakTime % 60}分鐘\n`;
+        advice += `• 工作時間：${this.formatTime(totalWorkTime)}\n`;
+        advice += `• 休息時間：${this.formatTime(breakTime)}\n`;
         advice += `• 工作效率：${Math.round(workEfficiency)}%\n\n`;
         
         if (workEfficiency < 60) {
