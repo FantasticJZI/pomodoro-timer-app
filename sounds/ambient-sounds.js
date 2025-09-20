@@ -1,47 +1,42 @@
-// 環境音效資源配置
+// 環境音效資源配置 - 使用更可靠的音效源
 const AMBIENT_SOUNDS = {
     rain: {
         name: '雨聲',
         urls: [
-            'https://www.soundjay.com/misc/sounds/rain-01.mp3',
             'https://www.bensound.com/bensound-music/bensound-rain.mp3',
-            'https://freesound.org/data/previews/316/316847_4939433-lq.mp3'
+            'https://www.soundjay.com/misc/sounds/rain-01.mp3'
         ],
         description: '舒緩的雨滴聲，幫助專注'
     },
     forest: {
         name: '森林',
         urls: [
-            'https://www.soundjay.com/nature/sounds/forest-01.mp3',
             'https://www.bensound.com/bensound-music/bensound-forest.mp3',
-            'https://freesound.org/data/previews/316/316847_4939433-lq.mp3'
+            'https://www.soundjay.com/nature/sounds/forest-01.mp3'
         ],
         description: '自然的鳥叫聲和風聲'
     },
     ocean: {
         name: '海洋',
         urls: [
-            'https://www.soundjay.com/nature/sounds/ocean-01.mp3',
             'https://www.bensound.com/bensound-music/bensound-ocean.mp3',
-            'https://freesound.org/data/previews/316/316847_4939433-lq.mp3'
+            'https://www.soundjay.com/nature/sounds/ocean-01.mp3'
         ],
         description: '海浪拍岸聲，平靜放鬆'
     },
     cafe: {
         name: '咖啡廳',
         urls: [
-            'https://www.soundjay.com/misc/sounds/cafe-01.mp3',
             'https://www.bensound.com/bensound-music/bensound-cafe.mp3',
-            'https://freesound.org/data/previews/316/316847_4939433-lq.mp3'
+            'https://www.soundjay.com/misc/sounds/cafe-01.mp3'
         ],
         description: '咖啡廳環境音，模擬工作環境'
     },
     'white-noise': {
         name: '白噪音',
         urls: [
-            'https://www.soundjay.com/misc/sounds/white-noise-01.mp3',
             'https://www.bensound.com/bensound-music/bensound-whitenoise.mp3',
-            'https://freesound.org/data/previews/316/316847_4939433-lq.mp3'
+            'https://www.soundjay.com/misc/sounds/white-noise-01.mp3'
         ],
         description: '均勻的噪音，深度專注'
     }
@@ -66,7 +61,7 @@ class AmbientSoundManager {
         const soundConfig = AMBIENT_SOUNDS[type];
         if (!soundConfig) {
             console.error('未知的音效類型:', type);
-            return;
+            throw new Error('未知的音效類型');
         }
         
         this.currentType = type;
@@ -96,14 +91,31 @@ class AmbientSoundManager {
             audio.crossOrigin = 'anonymous';
             audio.preload = 'auto';
             
+            // 設置超時
+            const timeout = setTimeout(() => {
+                reject(new Error('音頻加載超時'));
+            }, 10000);
+            
             audio.oncanplaythrough = () => {
-                audio.play().then(() => {
+                clearTimeout(timeout);
+                // 需要用戶交互才能播放音頻
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        this.currentAudio = audio;
+                        resolve();
+                    }).catch((error) => {
+                        console.log('音頻播放被阻止，需要用戶交互:', error);
+                        reject(error);
+                    });
+                } else {
                     this.currentAudio = audio;
                     resolve();
-                }).catch(reject);
+                }
             };
             
             audio.onerror = () => {
+                clearTimeout(timeout);
                 reject(new Error('音頻加載失敗'));
             };
             

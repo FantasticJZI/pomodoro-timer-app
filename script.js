@@ -11,6 +11,7 @@ class PomodoroPro {
         this.currentProject = null;
         this.ambientSoundManager = new AmbientSoundManager();
         this.currentAmbientSound = null;
+        this.wasPausedByVisibility = false;
         
         // 時間設置
         this.settings = {
@@ -343,6 +344,35 @@ class PomodoroPro {
     selectAmbientSound(soundType) {
         this.currentAmbientSound = soundType;
         this.playAmbientBtn.disabled = !soundType;
+        
+        // 自動測試音效（短暫播放）
+        if (soundType) {
+            this.testAmbientSound(soundType);
+        }
+    }
+    
+    async testAmbientSound(type) {
+        try {
+            // 創建測試音頻
+            const testAudio = new Audio();
+            testAudio.volume = 0.1;
+            testAudio.loop = false;
+            testAudio.crossOrigin = 'anonymous';
+            
+            // 使用第一個可用的URL
+            const soundConfig = AMBIENT_SOUNDS[type];
+            if (soundConfig && soundConfig.urls.length > 0) {
+                testAudio.src = soundConfig.urls[0];
+                
+                // 播放1秒後停止
+                await testAudio.play();
+                setTimeout(() => {
+                    testAudio.pause();
+                }, 1000);
+            }
+        } catch (error) {
+            console.log('音效測試失敗:', error);
+        }
     }
     
     async playAmbientSound() {
@@ -355,7 +385,11 @@ class PomodoroPro {
             this.showNotification('環境音效已開始播放', 'success');
         } catch (error) {
             console.error('播放環境音效失敗:', error);
-            this.showNotification('環境音效播放失敗', 'error');
+            if (error.message.includes('用戶交互')) {
+                this.showNotification('請先點擊頁面任意位置，然後再播放音效', 'info');
+            } else {
+                this.showNotification('環境音效播放失敗，請檢查網路連接', 'error');
+            }
         }
     }
     
@@ -1247,7 +1281,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 頁面可見性變化時暫停/恢復計時器
 document.addEventListener('visibilitychange', () => {
-    if (document.hidden && window.pomodoroPro && window.pomodoroPro.isRunning) {
-        window.pomodoroPro.pauseTimer();
+    if (window.pomodoroPro) {
+        if (document.hidden && window.pomodoroPro.isRunning) {
+            // 頁面隱藏時暫停計時器
+            window.pomodoroPro.pauseTimer();
+            window.pomodoroPro.wasPausedByVisibility = true;
+        } else if (!document.hidden && window.pomodoroPro.wasPausedByVisibility && window.pomodoroPro.isPaused) {
+            // 頁面重新可見時恢復計時器
+            window.pomodoroPro.resumeTimer();
+            window.pomodoroPro.wasPausedByVisibility = false;
+        }
     }
 });
