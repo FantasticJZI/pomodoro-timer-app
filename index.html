@@ -65,18 +65,20 @@
                     </div>
 
                     <div class="mode-selector">
-                        <button class="mode-btn active" data-mode="work">
+                        <button class="mode-btn active" data-mode="25-5">
                             <i class="fas fa-briefcase"></i>
-                            工作
+                            25-5 模式
                         </button>
-                        <button class="mode-btn" data-mode="short-break">
-                            <i class="fas fa-coffee"></i>
-                            短休息
+                        <button class="mode-btn" data-mode="50-10">
+                            <i class="fas fa-clock"></i>
+                            50-10 模式
                         </button>
-                        <button class="mode-btn" data-mode="long-break">
-                            <i class="fas fa-bed"></i>
-                            長休息
-                        </button>
+                    </div>
+
+                    <div class="session-settings">
+                        <label for="sessionCount">Session 數量：</label>
+                        <input type="number" id="sessionCount" min="1" max="20" value="4" class="session-input">
+                        <span class="session-info">個 Session</span>
                     </div>
 
                     <div class="timer-display">
@@ -256,22 +258,16 @@
                 </div>
                 <div class="modal-body">
                     <div class="setting-group">
-                        <h3>計時器設置</h3>
-                        <div class="setting-item">
-                            <label for="workTime">工作時間 (分鐘)</label>
-                            <input type="number" id="workTime" min="1" max="60" value="25">
-                        </div>
-                        <div class="setting-item">
-                            <label for="shortBreakTime">短休息時間 (分鐘)</label>
-                            <input type="number" id="shortBreakTime" min="1" max="30" value="5">
-                        </div>
-                        <div class="setting-item">
-                            <label for="longBreakTime">長休息時間 (分鐘)</label>
-                            <input type="number" id="longBreakTime" min="1" max="60" value="15">
-                        </div>
-                        <div class="setting-item">
-                            <label for="longBreakInterval">長休息間隔 (番茄數)</label>
-                            <input type="number" id="longBreakInterval" min="2" max="10" value="4">
+                        <h3>模式說明</h3>
+                        <div class="mode-info">
+                            <div class="mode-info-item">
+                                <h4>25-5 模式</h4>
+                                <p>25分鐘工作 + 5分鐘休息，適合專注度要求高的任務</p>
+                            </div>
+                            <div class="mode-info-item">
+                                <h4>50-10 模式</h4>
+                                <p>50分鐘工作 + 10分鐘休息，適合需要長時間專注的任務</p>
+                            </div>
                         </div>
                     </div>
                     <div class="setting-group">

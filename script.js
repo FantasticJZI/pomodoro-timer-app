@@ -1,24 +1,34 @@
 // 番茄鐘Pro - 智能生產力管理系統
 class PomodoroPro {
     constructor() {
-        this.currentMode = 'work';
+        this.currentMode = '25-5';
         this.isRunning = false;
         this.isPaused = false;
         this.timeLeft = 25 * 60;
         this.totalTime = 25 * 60;
         this.sessionCount = 1;
-        this.longBreakInterval = 4;
+        this.totalSessions = 4;
         this.currentProject = null;
         this.ambientSoundManager = new AmbientSoundManager();
         this.currentAmbientSound = null;
         this.wasPausedByVisibility = false;
         
-        // 時間設置
+        // 固定模式設置
+        this.modes = {
+            '25-5': {
+                workTime: 25,
+                breakTime: 5,
+                name: '25-5 模式'
+            },
+            '50-10': {
+                workTime: 50,
+                breakTime: 10,
+                name: '50-10 模式'
+            }
+        };
+        
+        // 其他設置
         this.settings = {
-            workTime: 25,
-            shortBreakTime: 5,
-            longBreakTime: 15,
-            longBreakInterval: 4,
             soundEnabled: true,
             ambientEnabled: true,
             aiPersonality: 'friendly'
@@ -96,6 +106,9 @@ class PomodoroPro {
         this.testWorkCompleteBtn = document.getElementById('testWorkComplete');
         this.testBreakCompleteBtn = document.getElementById('testBreakComplete');
         
+        // Session 設置
+        this.sessionCountInput = document.getElementById('sessionCount');
+        
         // 項目模態框元素
         this.projectNameInput = document.getElementById('projectName');
         this.projectDescriptionInput = document.getElementById('projectDescription');
@@ -157,6 +170,9 @@ class PomodoroPro {
         this.testStartSoundBtn.addEventListener('click', () => this.playStartSound());
         this.testWorkCompleteBtn.addEventListener('click', () => this.testWorkCompletionSound());
         this.testBreakCompleteBtn.addEventListener('click', () => this.testBreakCompletionSound());
+        
+        // Session 數量變更事件
+        this.sessionCountInput.addEventListener('change', () => this.updateSessionCount());
         
         // 項目模態框事件
         this.closeProjectModalBtn = document.getElementById('closeProjectModal');
@@ -673,6 +689,28 @@ class PomodoroPro {
         }
     }
     
+    // 更新 Session 數量
+    updateSessionCount() {
+        const newCount = parseInt(this.sessionCountInput.value);
+        if (newCount >= 1 && newCount <= 20) {
+            this.totalSessions = newCount;
+            this.updateSessionDisplay();
+        } else {
+            // 恢復到有效值
+            this.sessionCountInput.value = this.totalSessions;
+        }
+    }
+    
+    // 更新 Session 顯示
+    updateSessionDisplay() {
+        this.sessionNumberEl.textContent = this.sessionCount;
+        if (this.sessionCount <= this.totalSessions) {
+            this.nextSessionTextEl.textContent = `下一個：工作 (${this.sessionCount}/${this.totalSessions})`;
+        } else {
+            this.nextSessionTextEl.textContent = '所有 Session 完成！';
+        }
+    }
+    
     // 計時器核心功能
     switchMode(mode) {
         if (this.isRunning) return;
@@ -687,20 +725,15 @@ class PomodoroPro {
             }
         });
         
-        // 設置對應的時間
-        switch (mode) {
-            case 'work':
-                this.totalTime = this.settings.workTime * 60;
-                break;
-            case 'short-break':
-                this.totalTime = this.settings.shortBreakTime * 60;
-                break;
-            case 'long-break':
-                this.totalTime = this.settings.longBreakTime * 60;
-                break;
-        }
-        
+        // 設置對應的時間（工作時間）
+        const modeConfig = this.modes[mode];
+        this.totalTime = modeConfig.workTime * 60;
         this.timeLeft = this.totalTime;
+        
+        // 重置 Session 計數
+        this.sessionCount = 1;
+        this.sessionNumberEl.textContent = this.sessionCount;
+        
         this.updateDisplay();
         this.updateProgress();
     }
@@ -796,8 +829,8 @@ class PomodoroPro {
         // 顯示通知
         this.showNotification();
         
-        // 自動切換到下一個模式
-        this.autoSwitchMode();
+        // 自動切換到休息模式
+        this.autoSwitchToBreak();
     }
     
     logTimeSession() {
@@ -832,23 +865,46 @@ class PomodoroPro {
         this.updateAnalytics();
     }
     
-    autoSwitchMode() {
-        if (this.currentMode === 'work') {
-            this.sessionCount++;
-            this.sessionNumberEl.textContent = this.sessionCount;
-            
-            // 判斷是短休息還是長休息
-            if (this.sessionCount % this.settings.longBreakInterval === 0) {
-                this.switchMode('long-break');
-                this.nextSessionTextEl.textContent = '下一個：工作';
-            } else {
-                this.switchMode('short-break');
-                this.nextSessionTextEl.textContent = '下一個：工作';
-            }
+    autoSwitchToBreak() {
+        // 增加 Session 計數
+        this.sessionCount++;
+        this.sessionNumberEl.textContent = this.sessionCount;
+        
+        // 切換到休息模式
+        this.switchToBreakMode();
+    }
+    
+    switchToBreakMode() {
+        const modeConfig = this.modes[this.currentMode];
+        this.totalTime = modeConfig.breakTime * 60;
+        this.timeLeft = this.totalTime;
+        
+        // 更新顯示
+        this.updateDisplay();
+        this.updateProgress();
+        
+        // 更新提示文字
+        if (this.sessionCount <= this.totalSessions) {
+            this.nextSessionTextEl.textContent = `下一個：工作 (${this.sessionCount}/${this.totalSessions})`;
         } else {
-            this.switchMode('work');
-            this.nextSessionTextEl.textContent = this.sessionCount % this.settings.longBreakInterval === 0 ? 
-                '下一個：長休息' : '下一個：短休息';
+            this.nextSessionTextEl.textContent = '所有 Session 完成！';
+        }
+    }
+    
+    switchToWorkMode() {
+        const modeConfig = this.modes[this.currentMode];
+        this.totalTime = modeConfig.workTime * 60;
+        this.timeLeft = this.totalTime;
+        
+        // 更新顯示
+        this.updateDisplay();
+        this.updateProgress();
+        
+        // 更新提示文字
+        if (this.sessionCount <= this.totalSessions) {
+            this.nextSessionTextEl.textContent = `下一個：休息 (${this.sessionCount}/${this.totalSessions})`;
+        } else {
+            this.nextSessionTextEl.textContent = '所有 Session 完成！';
         }
     }
     
@@ -868,37 +924,36 @@ class PomodoroPro {
         this.progressCircle.style.strokeDasharray = circumference;
         this.progressCircle.style.strokeDashoffset = offset;
         
-        // 根據模式改變進度條顏色
+        // 根據當前狀態改變進度條顏色
         this.progressCircle.classList.remove('progress');
         if (this.timeLeft < this.totalTime) {
             this.progressCircle.classList.add('progress');
             
-            switch (this.currentMode) {
-                case 'work':
-                    this.progressCircle.style.stroke = '#ff6b6b';
-                    break;
-                case 'short-break':
-                    this.progressCircle.style.stroke = '#4ecdc4';
-                    break;
-                case 'long-break':
-                    this.progressCircle.style.stroke = '#45b7d1';
-                    break;
+            // 判斷當前是工作還是休息
+            const modeConfig = this.modes[this.currentMode];
+            const isWorkTime = this.totalTime === modeConfig.workTime * 60;
+            
+            if (isWorkTime) {
+                this.progressCircle.style.stroke = '#ff6b6b'; // 工作時間 - 紅色
+            } else {
+                this.progressCircle.style.stroke = '#4ecdc4'; // 休息時間 - 綠色
             }
         }
     }
     
     showNotification() {
+        const modeConfig = this.modes[this.currentMode];
+        const isWorkTime = this.totalTime === modeConfig.workTime * 60;
+        
         let message = '';
-        switch (this.currentMode) {
-            case 'work':
-                message = '工作時間結束！該休息了 🎉';
-                break;
-            case 'short-break':
-                message = '短休息結束！準備開始工作 💪';
-                break;
-            case 'long-break':
-                message = '長休息結束！準備開始工作 🚀';
-                break;
+        if (isWorkTime) {
+            message = `工作時間結束！該休息了 🎉 (Session ${this.sessionCount}/${this.totalSessions})`;
+        } else {
+            if (this.sessionCount <= this.totalSessions) {
+                message = `休息時間結束！準備下一個工作 Session 💪 (${this.sessionCount}/${this.totalSessions})`;
+            } else {
+                message = '所有 Session 完成！恭喜你！ 🚀';
+            }
         }
         
         this.notificationText.textContent = message;
@@ -1488,10 +1543,6 @@ class PomodoroPro {
         document.body.style.overflow = 'hidden';
         
         // 填充當前設置
-        this.workTimeInput.value = this.settings.workTime;
-        this.shortBreakTimeInput.value = this.settings.shortBreakTime;
-        this.longBreakTimeInput.value = this.settings.longBreakTime;
-        this.longBreakIntervalInput.value = this.settings.longBreakInterval;
         this.soundEnabledInput.checked = this.settings.soundEnabled;
         this.ambientEnabledInput.checked = this.settings.ambientEnabled;
         this.aiPersonalityInput.value = this.settings.aiPersonality;
@@ -1503,10 +1554,6 @@ class PomodoroPro {
     }
     
     saveSettings() {
-        this.settings.workTime = parseInt(this.workTimeInput.value);
-        this.settings.shortBreakTime = parseInt(this.shortBreakTimeInput.value);
-        this.settings.longBreakTime = parseInt(this.longBreakTimeInput.value);
-        this.settings.longBreakInterval = parseInt(this.longBreakIntervalInput.value);
         this.settings.soundEnabled = this.soundEnabledInput.checked;
         this.settings.ambientEnabled = this.ambientEnabledInput.checked;
         this.settings.aiPersonality = this.aiPersonalityInput.value;
@@ -1531,7 +1578,9 @@ class PomodoroPro {
             settings: this.settings,
             projects: this.projects,
             timeLogs: this.timeLogs,
-            sessionCount: this.sessionCount
+            sessionCount: this.sessionCount,
+            totalSessions: this.totalSessions,
+            currentMode: this.currentMode
         };
         localStorage.setItem('pomodoroProData', JSON.stringify(data));
     }
@@ -1544,7 +1593,24 @@ class PomodoroPro {
             this.projects = data.projects || [];
             this.timeLogs = data.timeLogs || [];
             this.sessionCount = data.sessionCount || 1;
+            this.totalSessions = data.totalSessions || 4;
+            this.currentMode = data.currentMode || '25-5';
         }
+        
+        // 更新 Session 輸入框
+        this.sessionCountInput.value = this.totalSessions;
+        
+        // 更新模式按鈕狀態
+        this.modeBtns.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.mode === this.currentMode) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // 更新顯示
+        this.updateSessionDisplay();
+        this.switchMode(this.currentMode);
         
         this.updateProjectSelect();
     }
