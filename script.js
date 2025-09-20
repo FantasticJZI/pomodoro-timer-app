@@ -148,8 +148,8 @@ class PomodoroPro {
         this.saveSettingsBtn.addEventListener('click', () => this.saveSettings());
         
         // 項目模態框事件
-        this.closeProjectModal = document.getElementById('closeProjectModal');
-        this.closeProjectModal.addEventListener('click', () => this.closeProjectModal());
+        this.closeProjectModalBtn = document.getElementById('closeProjectModal');
+        this.closeProjectModalBtn.addEventListener('click', () => this.closeProjectModal());
         
         // 統計頁面事件
         this.analyticsDateInput.addEventListener('change', () => this.updateAnalytics());
