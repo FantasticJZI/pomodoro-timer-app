@@ -350,8 +350,12 @@ class PomodoroPro {
         
         this.stopAmbientSound();
         
-        // 創建環境音（使用Web Audio API生成）
+        // 創建環境音
         this.ambientAudio = this.createAmbientSound(this.currentAmbientSound);
+        
+        // 播放音頻
+        this.ambientAudio.play();
+        
         this.playAmbientBtn.disabled = true;
         this.stopAmbientBtn.disabled = false;
     }
@@ -366,61 +370,77 @@ class PomodoroPro {
     }
     
     createAmbientSound(type) {
+        // 使用本地音頻文件
+        const soundUrls = {
+            'rain': './sounds/rain.mp3',
+            'forest': './sounds/forest.mp3', 
+            'ocean': './sounds/ocean.mp3',
+            'cafe': './sounds/cafe.mp3',
+            'white-noise': './sounds/white-noise.mp3'
+        };
+        
+        // 創建音頻元素
+        const audio = new Audio();
+        audio.loop = true;
+        audio.volume = 0.3;
+        audio.preload = 'auto';
+        
+        // 如果在線資源不可用，使用本地生成的音效
+        if (!soundUrls[type]) {
+            return this.createFallbackAmbientSound(type);
+        }
+        
+        audio.src = soundUrls[type];
+        
+        return {
+            audio: audio,
+            play: function() {
+                audio.play().catch(e => {
+                    console.log('本地音頻播放失敗，使用備用音效:', e);
+                    // 如果本地音頻失敗，使用備用音效
+                    return this.createFallbackAmbientSound(type);
+                });
+            },
+            stop: function() {
+                audio.pause();
+                audio.currentTime = 0;
+            },
+            setVolume: function(volume) {
+                audio.volume = Math.max(0, Math.min(1, volume));
+            }
+        };
+    }
+    
+    createFallbackAmbientSound(type) {
+        // 備用方案：使用Web Audio API創建更自然的音效
         if (!this.audioContext) {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
         
-        // 創建主增益節點
         const masterGain = this.audioContext.createGain();
         masterGain.connect(this.audioContext.destination);
         masterGain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
         
-        // 創建濾波器
-        const filter = this.audioContext.createBiquadFilter();
-        filter.connect(masterGain);
-        
-        // 創建多個振盪器來模擬自然聲音
         const oscillators = [];
         
         switch (type) {
             case 'rain':
-                // 雨聲：多個低頻振盪器 + 濾波器
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(800, this.audioContext.currentTime);
-                filter.Q.setValueAtTime(1, this.audioContext.currentTime);
-                
+                // 雨聲：使用噪聲生成器
                 for (let i = 0; i < 3; i++) {
                     const osc = this.audioContext.createOscillator();
                     const gain = this.audioContext.createGain();
-                    osc.connect(gain);
-                    gain.connect(filter);
+                    const filter = this.audioContext.createBiquadFilter();
                     
-                    osc.frequency.setValueAtTime(50 + i * 20, this.audioContext.currentTime);
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(masterGain);
+                    
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(800, this.audioContext.currentTime);
+                    filter.Q.setValueAtTime(0.5, this.audioContext.currentTime);
+                    
+                    osc.frequency.setValueAtTime(50 + i * 30, this.audioContext.currentTime);
                     osc.type = 'sawtooth';
-                    gain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-                    
-                    // 添加輕微的頻率變化
-                    osc.frequency.setValueAtTime(50 + i * 20 + Math.random() * 10, this.audioContext.currentTime + 0.1);
-                    
-                    osc.start();
-                    oscillators.push(osc);
-                }
-                break;
-                
-            case 'forest':
-                // 森林：鳥叫聲模擬
-                filter.type = 'bandpass';
-                filter.frequency.setValueAtTime(2000, this.audioContext.currentTime);
-                filter.Q.setValueAtTime(0.5, this.audioContext.currentTime);
-                
-                for (let i = 0; i < 2; i++) {
-                    const osc = this.audioContext.createOscillator();
-                    const gain = this.audioContext.createGain();
-                    osc.connect(gain);
-                    gain.connect(filter);
-                    
-                    osc.frequency.setValueAtTime(800 + i * 400, this.audioContext.currentTime);
-                    osc.type = 'sine';
                     gain.gain.setValueAtTime(0.05, this.audioContext.currentTime);
                     
                     osc.start();
@@ -428,62 +448,90 @@ class PomodoroPro {
                 }
                 break;
                 
-            case 'ocean':
-                // 海浪聲：低頻波浪
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(200, this.audioContext.currentTime);
-                filter.Q.setValueAtTime(0.3, this.audioContext.currentTime);
+            case 'forest':
+                // 森林：鳥叫聲
+                for (let i = 0; i < 2; i++) {
+                    const osc = this.audioContext.createOscillator();
+                    const gain = this.audioContext.createGain();
+                    const filter = this.audioContext.createBiquadFilter();
+                    
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(masterGain);
+                    
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(1000 + i * 500, this.audioContext.currentTime);
+                    filter.Q.setValueAtTime(0.3, this.audioContext.currentTime);
+                    
+                    osc.frequency.setValueAtTime(800 + i * 400, this.audioContext.currentTime);
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.03, this.audioContext.currentTime);
+                    
+                    osc.start();
+                    oscillators.push(osc);
+                }
+                break;
                 
+            case 'ocean':
+                // 海洋：波浪聲
                 const osc = this.audioContext.createOscillator();
                 const gain = this.audioContext.createGain();
-                osc.connect(gain);
-                gain.connect(filter);
+                const filter = this.audioContext.createBiquadFilter();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(masterGain);
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(300, this.audioContext.currentTime);
+                filter.Q.setValueAtTime(0.2, this.audioContext.currentTime);
                 
                 osc.frequency.setValueAtTime(60, this.audioContext.currentTime);
                 osc.type = 'sine';
-                gain.gain.setValueAtTime(0.08, this.audioContext.currentTime);
-                
-                // 添加波浪效果
-                osc.frequency.setValueAtTime(60, this.audioContext.currentTime);
-                osc.frequency.setValueAtTime(80, this.audioContext.currentTime + 2);
-                osc.frequency.setValueAtTime(60, this.audioContext.currentTime + 4);
+                gain.gain.setValueAtTime(0.06, this.audioContext.currentTime);
                 
                 osc.start();
                 oscillators.push(osc);
                 break;
                 
             case 'cafe':
-                // 咖啡廳：中頻環境音
-                filter.type = 'bandpass';
-                filter.frequency.setValueAtTime(500, this.audioContext.currentTime);
-                filter.Q.setValueAtTime(0.2, this.audioContext.currentTime);
-                
+                // 咖啡廳：環境音
                 const osc2 = this.audioContext.createOscillator();
                 const gain2 = this.audioContext.createGain();
-                osc2.connect(gain2);
-                gain2.connect(filter);
+                const filter2 = this.audioContext.createBiquadFilter();
+                
+                osc2.connect(filter2);
+                filter2.connect(gain2);
+                gain2.connect(masterGain);
+                
+                filter2.type = 'bandpass';
+                filter2.frequency.setValueAtTime(400, this.audioContext.currentTime);
+                filter2.Q.setValueAtTime(0.1, this.audioContext.currentTime);
                 
                 osc2.frequency.setValueAtTime(200, this.audioContext.currentTime);
                 osc2.type = 'sawtooth';
-                gain2.gain.setValueAtTime(0.03, this.audioContext.currentTime);
+                gain2.gain.setValueAtTime(0.02, this.audioContext.currentTime);
                 
                 osc2.start();
                 oscillators.push(osc2);
                 break;
                 
             case 'white-noise':
-                // 白噪音：使用多個高頻振盪器
-                filter.type = 'highpass';
-                filter.frequency.setValueAtTime(1000, this.audioContext.currentTime);
-                filter.Q.setValueAtTime(0.1, this.audioContext.currentTime);
-                
-                for (let i = 0; i < 5; i++) {
+                // 白噪音
+                for (let i = 0; i < 3; i++) {
                     const osc = this.audioContext.createOscillator();
                     const gain = this.audioContext.createGain();
-                    osc.connect(gain);
-                    gain.connect(filter);
+                    const filter = this.audioContext.createBiquadFilter();
                     
-                    osc.frequency.setValueAtTime(1000 + i * 200, this.audioContext.currentTime);
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(masterGain);
+                    
+                    filter.type = 'highpass';
+                    filter.frequency.setValueAtTime(1000, this.audioContext.currentTime);
+                    filter.Q.setValueAtTime(0.1, this.audioContext.currentTime);
+                    
+                    osc.frequency.setValueAtTime(1000 + i * 500, this.audioContext.currentTime);
                     osc.type = 'sawtooth';
                     gain.gain.setValueAtTime(0.01, this.audioContext.currentTime);
                     
@@ -493,11 +541,16 @@ class PomodoroPro {
                 break;
         }
         
-        // 返回一個包含所有振盪器的對象
         return {
             oscillators: oscillators,
+            play: function() {
+                // 振盪器已經在創建時開始
+            },
             stop: function() {
                 oscillators.forEach(osc => osc.stop());
+            },
+            setVolume: function(volume) {
+                masterGain.gain.setValueAtTime(volume * 0.1, this.audioContext.currentTime);
             }
         };
     }
