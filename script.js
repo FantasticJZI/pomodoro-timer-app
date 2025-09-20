@@ -919,10 +919,22 @@ class PomodoroPro {
         const workLogs = dayLogs.filter(log => log.mode === 'work');
         const totalWorkTime = workLogs.reduce((sum, log) => sum + log.duration, 0);
         const projectStats = {};
+        const projectDetails = {};
         
+        // 收集項目統計和詳細信息
         workLogs.forEach(log => {
             if (!projectStats[log.projectName]) {
                 projectStats[log.projectName] = 0;
+                // 查找項目詳細信息
+                const project = this.projects.find(p => p.name === log.projectName);
+                if (project) {
+                    projectDetails[log.projectName] = {
+                        description: project.description,
+                        goal: project.goal,
+                        completedPomodoros: project.completedPomodoros,
+                        totalTime: project.totalTime
+                    };
+                }
             }
             projectStats[log.projectName] += log.duration;
         });
@@ -933,6 +945,9 @@ class PomodoroPro {
         
         const focusScore = Math.round((workLogs.length / dayLogs.length) * 100);
         
+        // 生成項目分析
+        const projectAnalysis = this.generateProjectAnalysis(projectStats, projectDetails);
+        
         return `
             <div class="ai-summary-content">
                 <h4>📊 今日工作分析</h4>
@@ -941,31 +956,157 @@ class PomodoroPro {
                 <p><strong>專注度評分：</strong>${focusScore}%</p>
                 <p><strong>主要項目：</strong>${topProject[0]} (${Math.floor(topProject[1] / 60)}小時)</p>
                 
-                <h4>💡 AI建議</h4>
-                <p>${this.getAIAdvice(focusScore, workLogs.length, totalWorkTime)}</p>
+                <h4>🎯 項目進度分析</h4>
+                ${projectAnalysis}
                 
-                <h4>🎯 明日目標</h4>
-                <p>${this.getTomorrowGoal(projectStats, workLogs.length)}</p>
+                <h4>💡 AI建議</h4>
+                <p>${this.getAIAdvice(focusScore, workLogs.length, totalWorkTime, projectDetails)}</p>
+                
+                <h4>🚀 明日目標</h4>
+                <p>${this.getTomorrowGoal(projectStats, workLogs.length, projectDetails)}</p>
             </div>
         `;
     }
     
-    getAIAdvice(focusScore, pomodoros, totalTime) {
-        if (focusScore >= 80) {
-            return "太棒了！你的專注度很高，保持這個節奏！";
-        } else if (focusScore >= 60) {
-            return "專注度不錯，建議減少休息時間的干擾，提高工作效率。";
+    generateProjectAnalysis(projectStats, projectDetails) {
+        let analysis = '';
+        
+        Object.entries(projectStats).forEach(([projectName, timeSpent]) => {
+            const details = projectDetails[projectName];
+            const hours = Math.floor(timeSpent / 60);
+            const minutes = timeSpent % 60;
+            
+            analysis += `<div class="project-analysis-item">`;
+            analysis += `<h5>📋 ${projectName}</h5>`;
+            
+            if (details) {
+                analysis += `<p><strong>項目描述：</strong>${details.description || '無描述'}</p>`;
+                analysis += `<p><strong>今日投入：</strong>${hours}小時${minutes}分鐘</p>`;
+                analysis += `<p><strong>總進度：</strong>${details.completedPomodoros}/${details.goal} 番茄 (${Math.round((details.completedPomodoros / details.goal) * 100)}%)</p>`;
+                
+                // 基於項目描述給出建議
+                if (details.description) {
+                    const suggestion = this.getProjectSpecificAdvice(projectName, details.description, timeSpent, details.completedPomodoros, details.goal);
+                    analysis += `<p><strong>AI建議：</strong>${suggestion}</p>`;
+                }
+            } else {
+                analysis += `<p><strong>今日投入：</strong>${hours}小時${minutes}分鐘</p>`;
+                analysis += `<p><em>建議為此項目添加描述，以便AI提供更精準的分析</em></p>`;
+            }
+            
+            analysis += `</div>`;
+        });
+        
+        return analysis || '<p>今日沒有項目工作記錄</p>';
+    }
+    
+    getProjectSpecificAdvice(projectName, description, timeSpent, completedPomodoros, goal) {
+        const progress = (completedPomodoros / goal) * 100;
+        const hours = Math.floor(timeSpent / 60);
+        
+        // 基於項目描述和進度給出建議
+        if (description.includes('學習') || description.includes('study')) {
+            if (progress < 30) {
+                return `學習項目剛開始，建議每天至少投入2小時，保持連續性學習。`;
+            } else if (progress < 70) {
+                return `學習進度良好，建議增加實踐時間，將理論與實際結合。`;
+            } else {
+                return `學習項目接近完成，建議總結知識點，準備應用測試。`;
+            }
+        } else if (description.includes('工作') || description.includes('work')) {
+            if (hours < 2) {
+                return `工作時間較短，建議增加專注時間，提高工作效率。`;
+            } else if (hours > 6) {
+                return `工作時間較長，注意休息，避免過度疲勞。`;
+            } else {
+                return `工作時間合理，保持這個節奏，注意勞逸結合。`;
+            }
+        } else if (description.includes('創作') || description.includes('creative')) {
+            if (progress < 50) {
+                return `創作項目需要靈感，建議在創意高峰期工作，保持創作熱情。`;
+            } else {
+                return `創作進度不錯，建議定期回顧作品，保持創作質量。`;
+            }
+        } else if (description.includes('運動') || description.includes('exercise')) {
+            return `運動項目很棒！建議保持規律性，注意運動後的恢復時間。`;
         } else {
-            return "專注度有待提高，建議關閉通知，選擇安靜的環境工作。";
+            // 通用建議
+            if (progress < 25) {
+                return `項目剛開始，建議制定詳細計劃，分解大目標為小任務。`;
+            } else if (progress < 75) {
+                return `項目進展順利，建議保持當前節奏，注意質量控制。`;
+            } else {
+                return `項目接近完成，建議檢查細節，確保質量達標。`;
+            }
         }
     }
     
-    getTomorrowGoal(projectStats, pomodoros) {
-        const projects = Object.keys(projectStats);
-        if (projects.length > 1) {
-            return `建議明天專注於${projects[0]}項目，目標完成${pomodoros + 2}個番茄。`;
+    getAIAdvice(focusScore, pomodoros, totalTime, projectDetails = {}) {
+        let advice = '';
+        
+        if (focusScore >= 80) {
+            advice = "太棒了！你的專注度很高，保持這個節奏！";
+        } else if (focusScore >= 60) {
+            advice = "專注度不錯，建議減少休息時間的干擾，提高工作效率。";
         } else {
-            return `建議明天繼續專注於當前項目，目標完成${pomodoros + 3}個番茄。`;
+            advice = "專注度有待提高，建議關閉通知，選擇安靜的環境工作。";
+        }
+        
+        // 基於項目情況給出額外建議
+        const projectCount = Object.keys(projectDetails).length;
+        if (projectCount > 3) {
+            advice += " 注意：你同時進行多個項目，建議專注於1-2個主要項目，避免分散注意力。";
+        } else if (projectCount === 1) {
+            advice += " 很好！專注於單一項目有助於深度工作，保持這個策略。";
+        }
+        
+        return advice;
+    }
+    
+    getTomorrowGoal(projectStats, pomodoros, projectDetails = {}) {
+        const projects = Object.keys(projectStats);
+        
+        if (projects.length === 0) {
+            return `明天開始新的工作，建議先創建項目並設定目標。`;
+        }
+        
+        // 找到進度最低的項目
+        let lowestProgressProject = null;
+        let lowestProgress = 100;
+        
+        Object.entries(projectStats).forEach(([projectName, timeSpent]) => {
+            const details = projectDetails[projectName];
+            if (details) {
+                const progress = (details.completedPomodoros / details.goal) * 100;
+                if (progress < lowestProgress) {
+                    lowestProgress = progress;
+                    lowestProgressProject = projectName;
+                }
+            }
+        });
+        
+        if (lowestProgressProject) {
+            const details = projectDetails[lowestProgressProject];
+            const remainingPomodoros = details.goal - details.completedPomodoros;
+            const suggestedPomodoros = Math.min(remainingPomodoros, pomodoros + 2);
+            
+            return `建議明天專注於「${lowestProgressProject}」項目，目標完成${suggestedPomodoros}個番茄。${details.description ? `基於項目描述「${details.description}」，建議${this.getProjectSpecificGoal(details.description, remainingPomodoros)}` : ''}`;
+        } else {
+            return `建議明天專注於${projects[0]}項目，目標完成${pomodoros + 2}個番茄。`;
+        }
+    }
+    
+    getProjectSpecificGoal(description, remainingPomodoros) {
+        if (description.includes('學習') || description.includes('study')) {
+            return `採用25分鐘學習+5分鐘複習的模式，確保知識鞏固。`;
+        } else if (description.includes('工作') || description.includes('work')) {
+            return `保持專注工作，每小時休息一次，避免過度疲勞。`;
+        } else if (description.includes('創作') || description.includes('creative')) {
+            return `在創意高峰期工作，保持靈感流暢。`;
+        } else if (description.includes('運動') || description.includes('exercise')) {
+            return `保持運動強度適中，注意身體恢復。`;
+        } else {
+            return `保持穩定的工作節奏，確保質量優先。`;
         }
     }
     
@@ -1006,32 +1147,203 @@ class PomodoroPro {
     }
     
     generateAIResponse(message) {
-        const responses = {
-            '你好': '你好！我是你的AI生產力助理，有什麼可以幫助你的嗎？',
-            '今天工作怎麼樣': '讓我分析一下你今天的工作數據...',
-            '如何提高效率': '建議使用番茄工作法，專注25分鐘後休息5分鐘，保持規律作息。',
-            '設定目標': '好的，請告訴我你想要達成什麼目標，我會幫你制定計劃。',
-            '週報': '讓我為你生成本週的工作報告...'
-        };
+        const lowerMessage = message.toLowerCase();
         
-        for (const [key, response] of Object.entries(responses)) {
-            if (message.includes(key)) {
-                return response;
-            }
+        // 問候語
+        if (lowerMessage.includes('你好') || lowerMessage.includes('hi') || lowerMessage.includes('hello')) {
+            return '你好！我是你的AI生產力助理，我可以幫你分析工作數據、提供效率建議、制定目標計劃。有什麼可以幫助你的嗎？';
         }
         
-        return '我理解你的問題，讓我為你提供一些建議...';
+        // 工作分析
+        if (lowerMessage.includes('今天工作') || lowerMessage.includes('工作怎麼樣') || lowerMessage.includes('工作分析')) {
+            return this.generateWorkAnalysis();
+        }
+        
+        // 效率建議
+        if (lowerMessage.includes('如何提高效率') || lowerMessage.includes('效率') || lowerMessage.includes('專注')) {
+            return this.generateEfficiencyAdvice();
+        }
+        
+        // 目標設定
+        if (lowerMessage.includes('設定目標') || lowerMessage.includes('目標') || lowerMessage.includes('計劃')) {
+            return this.generateGoalSettingAdvice();
+        }
+        
+        // 項目相關
+        if (lowerMessage.includes('項目') || lowerMessage.includes('project')) {
+            return this.generateProjectAdvice();
+        }
+        
+        // 週報
+        if (lowerMessage.includes('週報') || lowerMessage.includes('週') || lowerMessage.includes('week')) {
+            return this.generateWeeklyReport();
+        }
+        
+        // 休息建議
+        if (lowerMessage.includes('休息') || lowerMessage.includes('累') || lowerMessage.includes('疲勞')) {
+            return '建議你適當休息，可以嘗試短暫的散步、深呼吸或聽音樂。記住，休息是為了更好的工作！';
+        }
+        
+        // 默認回應
+        return '我理解你的問題，讓我為你提供一些建議。你可以問我關於工作效率、項目管理、目標設定等問題。';
+    }
+    
+    generateWorkAnalysis() {
+        const today = new Date().toISOString().split('T')[0];
+        const todayLogs = this.timeLogs.filter(log => log.date === today);
+        const workLogs = todayLogs.filter(log => log.mode === 'work');
+        const totalTime = workLogs.reduce((sum, log) => sum + log.duration, 0);
+        
+        if (workLogs.length === 0) {
+            return '今天還沒有工作記錄，建議開始一個番茄鐘來提高生產力！';
+        }
+        
+        const hours = Math.floor(totalTime / 60);
+        const minutes = totalTime % 60;
+        const projects = [...new Set(workLogs.map(log => log.projectName))];
+        
+        return `今天你完成了${workLogs.length}個番茄鐘，總工作時間${hours}小時${minutes}分鐘。參與的項目有：${projects.join('、')}。${this.getWorkAnalysisAdvice(workLogs.length, totalTime)}`;
+    }
+    
+    generateEfficiencyAdvice() {
+        const advice = [
+            '使用番茄工作法：25分鐘專注工作，5分鐘休息',
+            '選擇適合的環境音效幫助專注',
+            '為每個項目設定明確的目標和描述',
+            '定期回顧和調整工作計劃',
+            '保持規律的作息時間'
+        ];
+        
+        return `以下是一些提高效率的建議：\n${advice.map((item, index) => `${index + 1}. ${item}`).join('\n')}`;
+    }
+    
+    generateGoalSettingAdvice() {
+        const activeProjects = this.projects.filter(p => p.completedPomodoros < p.goal);
+        
+        if (activeProjects.length === 0) {
+            return '目前沒有進行中的項目，建議創建新項目並設定目標。記住要設定具體、可測量、可達成的目標！';
+        }
+        
+        let advice = '基於你當前的項目，建議：\n';
+        activeProjects.forEach(project => {
+            const progress = Math.round((project.completedPomodoros / project.goal) * 100);
+            advice += `• ${project.name}：已完成${progress}%，${project.description ? `建議${this.getProjectSpecificAdvice(project.name, project.description, 0, project.completedPomodoros, project.goal)}` : '繼續保持當前進度'}\n`;
+        });
+        
+        return advice;
+    }
+    
+    generateProjectAdvice() {
+        if (this.projects.length === 0) {
+            return '你還沒有創建任何項目，建議先創建項目並添加詳細描述，這樣我就能提供更精準的建議了！';
+        }
+        
+        const activeProjects = this.projects.filter(p => p.completedPomodoros < p.goal);
+        const completedProjects = this.projects.filter(p => p.completedPomodoros >= p.goal);
+        
+        let advice = `你目前有${this.projects.length}個項目：\n`;
+        
+        if (activeProjects.length > 0) {
+            advice += `\n進行中的項目：\n`;
+            activeProjects.forEach(project => {
+                const progress = Math.round((project.completedPomodoros / project.goal) * 100);
+                advice += `• ${project.name} (${progress}%)：${project.description || '無描述'}\n`;
+            });
+        }
+        
+        if (completedProjects.length > 0) {
+            advice += `\n已完成的項目：\n`;
+            completedProjects.forEach(project => {
+                advice += `• ${project.name} ✅\n`;
+            });
+        }
+        
+        return advice;
+    }
+    
+    generateWeeklyReport() {
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const weekLogs = this.timeLogs.filter(log => new Date(log.date) >= weekAgo);
+        const workLogs = weekLogs.filter(log => log.mode === 'work');
+        
+        if (workLogs.length === 0) {
+            return '本週還沒有工作記錄，建議開始使用番茄鐘來追蹤你的工作時間！';
+        }
+        
+        const totalTime = workLogs.reduce((sum, log) => sum + log.duration, 0);
+        const hours = Math.floor(totalTime / 60);
+        const projects = [...new Set(workLogs.map(log => log.projectName))];
+        
+        return `本週工作報告：\n• 完成番茄鐘：${workLogs.length}個\n• 總工作時間：${hours}小時\n• 參與項目：${projects.join('、')}\n• 平均每天：${Math.round(workLogs.length / 7)}個番茄鐘\n\n建議下週保持這個節奏，繼續努力！`;
+    }
+    
+    getWorkAnalysisAdvice(pomodoros, totalTime) {
+        if (pomodoros < 4) {
+            return '建議增加工作時間，每天至少完成4個番茄鐘。';
+        } else if (pomodoros > 12) {
+            return '工作時間很長，注意適當休息，避免過度疲勞。';
+        } else {
+            return '工作節奏很好，保持這個狀態！';
+        }
     }
     
     handleAIFeature(feature) {
-        const features = {
-            'weekly-report': '讓我為你生成本週的工作報告...',
-            'goal-setting': '請告訴我你的目標，我會幫你制定計劃。',
-            'productivity-tips': '以下是一些提高效率的建議：1. 使用番茄工作法 2. 保持專注 3. 定期休息',
-            'time-optimization': '讓我分析你的時間使用情況，提供優化建議...'
-        };
+        let response = '';
         
-        this.addChatMessage(features[feature] || '功能開發中...', 'ai');
+        switch (feature) {
+            case 'weekly-report':
+                response = this.generateWeeklyReport();
+                break;
+            case 'goal-setting':
+                response = this.generateGoalSettingAdvice();
+                break;
+            case 'productivity-tips':
+                response = this.generateEfficiencyAdvice();
+                break;
+            case 'time-optimization':
+                response = this.generateTimeOptimizationAdvice();
+                break;
+            case 'project-analysis':
+                response = this.generateProjectAdvice();
+                break;
+            case 'work-analysis':
+                response = this.generateWorkAnalysis();
+                break;
+            default:
+                response = '功能開發中...';
+        }
+        
+        this.addChatMessage(response, 'ai');
+    }
+    
+    generateTimeOptimizationAdvice() {
+        const today = new Date().toISOString().split('T')[0];
+        const todayLogs = this.timeLogs.filter(log => log.date === today);
+        const workLogs = todayLogs.filter(log => log.mode === 'work');
+        
+        if (workLogs.length === 0) {
+            return '今天還沒有工作記錄，建議開始使用番茄鐘來追蹤時間使用情況。';
+        }
+        
+        const totalWorkTime = workLogs.reduce((sum, log) => sum + log.duration, 0);
+        const breakTime = todayLogs.filter(log => log.mode !== 'work').reduce((sum, log) => sum + log.duration, 0);
+        const workEfficiency = totalWorkTime / (totalWorkTime + breakTime) * 100;
+        
+        let advice = `時間使用分析：\n`;
+        advice += `• 工作時間：${Math.floor(totalWorkTime / 60)}小時${totalWorkTime % 60}分鐘\n`;
+        advice += `• 休息時間：${Math.floor(breakTime / 60)}小時${breakTime % 60}分鐘\n`;
+        advice += `• 工作效率：${Math.round(workEfficiency)}%\n\n`;
+        
+        if (workEfficiency < 60) {
+            advice += `建議：休息時間過多，建議增加工作專注度，減少不必要的休息。`;
+        } else if (workEfficiency > 90) {
+            advice += `建議：工作時間很長，注意適當休息，避免過度疲勞。`;
+        } else {
+            advice += `建議：時間分配合理，保持當前節奏。`;
+        }
+        
+        return advice;
     }
     
     // 設置功能
